@@ -126,7 +126,23 @@ simulate_attack(Planets, Actions) ->
             undefined ->
                 false;
             _ ->
-                is_process_alive(Pid)
+                case is_process_alive(Pid) of
+                    true ->
+                        timer:sleep(1),
+                        Pid ! {alive, self()},
+                        Ref = monitor(process, Pid),
+                        receive
+                            im_alive ->
+                                true;
+                            {'DOWN', Ref, process, Pid, _} ->
+                                false
+                        after
+                            1000 ->
+                                false
+                        end;
+                    false ->
+                        false
+                end
         end
     end, Planets).
 
